@@ -1,0 +1,61 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+    
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    
+    - name: Build APK
+      run: ./gradlew assembleDebug
+    
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: callrecorder-cleaner-apk
+        path: app/build/outputs/apk/debug/app-debug.apk
+    
+    - name: Create Release
+      if: github.ref == 'refs/heads/master'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: app/build/outputs/apk/debug/app-debug.apk
+        name: Call Recorder Cleaner v1.0
+        body: |
+          ## Call Recorder Cleaner
+          
+          Android app to analyze call recordings and delete ones containing keywords like "Paytm" or "Sound Box".
+          
+          ### Features:
+          - Date range filtering
+          - Keyword detection (Paytm, Sound Box)
+          - Offline speech recognition
+          - Batch delete
+          
+          ### Installation:
+          1. Download the APK below
+          2. Enable "Install from unknown sources"
+          3. Install and grant permissions
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
