@@ -19,7 +19,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.callrecorder.cleaner.model.Recording
 import com.callrecorder.cleaner.adapter.RecordingAdapter
-import com.callrecorder.cleaner.engine.AudioProcessor
 import com.callrecorder.cleaner.engine.SpeechAnalyzer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
