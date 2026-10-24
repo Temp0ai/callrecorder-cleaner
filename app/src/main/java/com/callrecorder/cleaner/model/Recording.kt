@@ -1,23 +1,26 @@
 package com.callrecorder.cleaner.model
 
-import java.io.File
-import java.util.Calendar
+import android.net.Uri
+import java.text.SimpleDateFormat
+import java.util.*
 
 data class Recording(
-    val file: File,
+    val uri: Uri,
+    val displayName: String,
+    val fileSize: Long,
     val date: Calendar,
     var isMatched: Boolean = false
 ) {
-    val displayName: String
-        get() = file.nameWithoutExtension
-    
-    val fileSize: String
+    val fileSizeFormatted: String
+        get() = when {
+            fileSize < 1024 -> "$fileSize B"
+            fileSize < 1024 * 1024 -> "${fileSize / 1024} KB"
+            else -> "${fileSize / (1024 * 1024)} MB"
+        }
+
+    val dateFormatted: String
         get() {
-            val size = file.length()
-            return when {
-                size < 1024 -> "$size B"
-                size < 1024 * 1024 -> "${size / 1024} KB"
-                else -> "${size / (1024 * 1024)} MB"
-            }
+            val sdf = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
+            return sdf.format(date.time)
         }
 }

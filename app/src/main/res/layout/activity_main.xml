@@ -5,22 +5,37 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Title -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Call Recorder Cleaner"
-        android:textSize="24sp"
+        android:textSize="22sp"
         android:textStyle="bold"
         android:gravity="center"
         android:layout_marginBottom="16dp" />
 
-    <!-- Date Range Selection -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Date Range:"
-        android:textSize="16sp"
+        android:text="Step 1: Select Recordings Folder"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/selectFolderButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📁 Select Call Recordings Folder"
+        android:backgroundTint="#2196F3"
+        android:textColor="@android:color/white"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Step 2: Select Date Range"
+        android:textSize="14sp"
         android:textStyle="bold"
         android:layout_marginBottom="8dp" />
 
@@ -46,12 +61,11 @@
             android:text="To: 15 Sep 2026" />
     </LinearLayout>
 
-    <!-- Keyword Input -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Keywords (comma separated):"
-        android:textSize="16sp"
+        android:text="Step 3: Keywords"
+        android:textSize="14sp"
         android:textStyle="bold"
         android:layout_marginBottom="8dp" />
 
@@ -59,28 +73,27 @@
         android:id="@+id/keywordInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Paytm, Sound Box"
         android:text="Paytm, Sound Box, Soundbox"
         android:inputType="text"
         android:layout_marginBottom="16dp"
         android:padding="12dp"
         android:background="@android:drawable/edit_text" />
 
-    <!-- Action Buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="12dp">
 
         <Button
             android:id="@+id/scanButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Scan Recordings"
+            android:text="SCAN"
             android:backgroundTint="#4CAF50"
             android:textColor="@android:color/white"
+            android:enabled="false"
             android:layout_marginEnd="8dp" />
 
         <Button
@@ -88,33 +101,31 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Delete Matched"
+            android:text="DELETE"
             android:backgroundTint="#F44336"
             android:textColor="@android:color/white"
             android:enabled="false" />
     </LinearLayout>
 
-    <!-- Status Text -->
     <TextView
         android:id="@+id/statusText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Select date range and tap Scan"
-        android:textSize="14sp"
+        android:text="Select your call recordings folder first"
+        android:textSize="13sp"
         android:textColor="#666666"
         android:gravity="center"
         android:padding="8dp"
         android:background="#F5F5F5"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="12dp" />
 
-    <!-- Recordings List -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Recordings:"
-        android:textSize="16sp"
+        android:textSize="14sp"
         android:textStyle="bold"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="4dp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recordingsRecyclerView"
