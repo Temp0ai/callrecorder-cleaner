@@ -4,7 +4,7 @@ import android.app.DatePickerDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.provider.DocumentsContract
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -106,28 +106,63 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openFolderPicker() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
-            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
-                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+        try {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+                addFlags(
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
+                            Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+                )
+            }
+            startActivityForResult(intent, FOLDER_PICKER_CODE)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error opening folder picker: ${e.message}", Toast.LENGTH_LONG).show()
+            Log.e(TAG, "Folder picker error", e)
         }
-        startActivityForResult(intent, FOLDER_PICKER_CODE)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+
+        Log.d(TAG, "onActivityResult: requestCode=$requestCode, resultCode=$resultCode, data=${data?.data}")
+
         if (requestCode == FOLDER_PICKER_CODE && resultCode == RESULT_OK) {
-            data?.data?.let { uri ->
-                contentResolver.takePersistableUriPermission(
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or
+            val uri = data?.data
+            if (uri != null) {
+                try {
+                    val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
                             Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
-                selectedFolderUri = uri
-                val folderName = DocumentFile.fromTreeUri(this, uri)?.name ?: "Selected"
-                statusText.text = "Folder selected: $folderName"
-                scanButton.isEnabled = true
+                    contentResolver.takePersistableUriPermission(uri, takeFlags)
+
+                    selectedFolderUri = uri
+
+                    val docFile = DocumentFile.fromTreeUri(this, uri)
+                    val folderName = docFile?.name ?: uri.lastPathSegment ?: "Selected"
+
+                    statusText.text = "✅ Folder selected: $folderName"
+                    scanButton.isEnabled = true
+
+                    Toast.makeText(this, "Folder selected: $folderName", Toast.LENGTH_SHORT).show()
+
+                    Log.d(TAG, "Folder selected: $uri")
+
+                } catch (e: SecurityException) {
+                    Toast.makeText(this, "Permission denied: ${e.message}", Toast.LENGTH_LONG).show()
+                    Log.e(TAG, "Permission error", e)
+                    statusText.text = "❌ Permission error. Try selecting folder again."
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    Log.e(TAG, "General error", e)
+                    statusText.text = "❌ Error selecting folder"
+                }
+            } else {
+                Toast.makeText(this, "No folder selected", Toast.LENGTH_SHORT).show()
+                statusText.text = "❌ No folder selected"
             }
+        } else {
+            Log.d(TAG, "Folder selection cancelled")
+            statusText.text = "Folder selection cancelled. Tap button to try again."
         }
     }
 
@@ -190,7 +225,7 @@ class MainActivity : AppCompatActivity() {
 
             } catch (e: Exception) {
                 statusText.text = "Error: ${e.message}"
-                Toast.makeText(this@MainActivity, "Scan failed: ${e.message}", Toast.LENGTH_LONG).show()
+                Log.e(TAG, "Scan error", e)
                 scanButton.isEnabled = true
             }
         }
@@ -200,8 +235,14 @@ class MainActivity : AppCompatActivity() {
         val results = mutableListOf<Recording>()
         val folderUri = selectedFolderUri ?: return results
 
-        val treeDoc = DocumentFile.fromTreeUri(this, folderUri) ?: return results
+        val treeDoc = DocumentFile.fromTreeUri(this, folderUri)
+        if (treeDoc == null || !treeDoc.isDirectory) {
+            Log.e(TAG, "Cannot access folder: $folderUri")
+            return results
+        }
+
         val children = treeDoc.listFiles()
+        Log.d(TAG, "Found ${children.size} items in folder")
 
         for (child in children) {
             if (!child.isFile) continue
@@ -215,10 +256,10 @@ class MainActivity : AppCompatActivity() {
                 timeInMillis = lastModified
             }
 
-            // Also try parsing date from filename
             val filenameDate = parseDateFromFilename(name)
-
             val effectiveDate = filenameDate ?: fileDate
+
+            Log.d(TAG, "File: $name, Date: ${effectiveDate.time}")
 
             if (effectiveDate.timeInMillis >= selectedStartDate.timeInMillis &&
                 effectiveDate.timeInMillis <= selectedEndDate.timeInMillis
@@ -231,7 +272,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun parseDateFromFilename(filename: String): Calendar? {
-        // Format: Call Name_YYMMDD_HHMMSS.m4a
         val regex = Regex("_(\\d{6})_(\\d{6})\\.")
         val match = regex.find(filename) ?: return null
 
@@ -275,7 +315,7 @@ class MainActivity : AppCompatActivity() {
                                 deletedCount++
                             }
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            Log.e(TAG, "Delete error for ${recording.displayName}", e)
                         }
                     }
                 }
@@ -297,5 +337,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val FOLDER_PICKER_CODE = 1001
+        private const val TAG = "CallRecorderCleaner"
     }
 }
